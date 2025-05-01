@@ -1,10 +1,12 @@
-import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
-import { MarkerItem } from './MarkerItem';
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { MarkerDetails } from './MarkerDetails';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Marker } from '@/types/Marker';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { MarkerItem } from "./MarkerItem";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MarkerDetails } from "./MarkerDetails";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Marker } from "@/types/Marker";
+import React from "react";
+import { defineMarkerAdress } from "@/services/osmService";
 
 interface MarkerListProps {
   markers: Array<Marker>;
@@ -15,33 +17,41 @@ export function MarkerList({ markers }: MarkerListProps) {
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   // variables
-  const snapPoints = useMemo(() => ['50%', '90%'], []);
+  const snapPoints = useMemo(() => ["25%", "50%", "70%", "90%"], []);
 
-  const handleMarkerPress = useCallback((item: Marker) => {
+  // When a marker is clicked, select it and show the bottom sheet
+  const handleMarkerPress = useCallback(async (item: Marker) => {
     setSelectedMarker(item);
     bottomSheetRef.current?.snapToIndex(1);
   }, []);
 
+  // Reset selected marker when bottom sheet is closed
+  const handleSheetClose = useCallback(() => {
+    setSelectedMarker(null);
+  }, []);
+
   // Effect to log selected marker after state update
   useEffect(() => {
-    console.log('Selected marker:', selectedMarker);
+    console.log("Selected marker:", selectedMarker);
   }, [selectedMarker]);
 
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
         data={markers}
-        refreshControl={<RefreshControl refreshing={false} onRefresh={() => {
-          
-          // TODO : Add the refresh of the List
- 
-        }}></RefreshControl>}
-        keyExtractor={(marker, index) => `${marker.title}-${index}`}
+        refreshControl={
+          <RefreshControl
+            refreshing={false}
+            onRefresh={() => {
+              // TODO : Add the refresh of the List
+            }}
+          ></RefreshControl>
+        }
+        keyExtractor={(marker, index) => `${marker.marker?.id ?? index}-${index}`}
         renderItem={({ item }) => (
-          <MarkerItem
-            marker={item}
-            onPress={() => handleMarkerPress(item)}
-          />
+          item.marker && (
+            <MarkerItem marker={item} onPress={() => handleMarkerPress(item)} />
+          )
         )}
         style={styles.list}
         contentContainerStyle={styles.contentContainer}
@@ -52,18 +62,19 @@ export function MarkerList({ markers }: MarkerListProps) {
         index={-1}
         snapPoints={snapPoints}
         enablePanDownToClose={true}
-        onClose={() => setSelectedMarker(null)}
-        style={styles.bottomSheet}
+        onClose={handleSheetClose}
         backgroundStyle={styles.bottomSheetBackground}
         handleIndicatorStyle={styles.bottomSheetIndicator}
       >
-        {selectedMarker ? (
-          <MarkerDetails markerItem={selectedMarker} />
-        ) : (
-          <View style={styles.noMarkerContainer}>
-            <Text style={styles.noMarkerText}>No marker selected</Text>
-          </View>
-        )}
+        <BottomSheetView style={styles.bottomSheetView}>
+          {selectedMarker ? (
+            <MarkerDetails markerItem={selectedMarker} />
+          ) : (
+            <View style={styles.noMarkerContainer}>
+              <Text style={styles.noMarkerText}>No marker selected</Text>
+            </View>
+          )}
+        </BottomSheetView>
       </BottomSheet>
     </SafeAreaView>
   );
@@ -72,7 +83,8 @@ export function MarkerList({ markers }: MarkerListProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    position: 'relative',
+    position: "relative",
+    backgroundColor: "transparent",
   },
   list: {
     flex: 1,
@@ -81,24 +93,26 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
   },
-  bottomSheet: {
+  bottomSheetView: {
     flex: 1,
   },
   bottomSheetBackground: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
   },
   bottomSheetIndicator: {
-    backgroundColor: '#999',
+    backgroundColor: "#999",
     width: 40,
   },
   noMarkerContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 16,
   },
   noMarkerText: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
 });

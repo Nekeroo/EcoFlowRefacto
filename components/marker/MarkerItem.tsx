@@ -1,6 +1,7 @@
 import { View, StyleSheet, Pressable } from 'react-native';
 import { Text } from '../ThemedText';
 import { Marker } from '@/types/Marker';
+import React from 'react';
 
 export interface MarkerItemProps {
   marker: Marker,
@@ -11,8 +12,9 @@ export function MarkerItem({ marker, onPress }: MarkerItemProps) {
   return (
     <Pressable onPress={onPress}>
       <View style={styles.container}>
-        <Text style={styles.title}>{marker.title}</Text>
-        <Text style={styles.description}>{marker.description}</Text>
+        <Text style={styles.title}>{marker.marker.name ?? ""}</Text>
+        <Text style={styles.description}>{marker.marker.address}</Text>
+        <Text style={styles.description}>{marker.marker.tags?.recycling_type || ""}</Text>
       </View>
     </Pressable>
   );

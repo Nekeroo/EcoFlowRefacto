@@ -11,10 +11,12 @@ export function MarkerDetails({ markerItem }: MarkerDetailsProps) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>{markerItem.title}</Text>
+        <Text style={styles.title}>{markerItem.marker.name}</Text>
       </View>
       <View style={styles.body}>
-        <Text style={styles.description}>{markerItem.description}</Text>
+        <Text style={styles.description}>{markerItem.marker.tags?.recycling_type || ""}</Text>
+        <Text style={styles.description}>{markerItem.marker.address || ""}</Text>
+        <Text style={styles.description}>{markerItem.distance || ""}</Text>
       </View>
     </View>
   );

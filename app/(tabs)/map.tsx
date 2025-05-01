@@ -1,30 +1,36 @@
-import { StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { MarkerList } from '../../components/marker/MarkerList';
-import { Marker } from '@/types/Marker';
-
-const sampleMarkers: Marker[] = [
-  {
-    title: 'Eiffel Tower',
-    description: 'Famous landmark in Paris, France',
-  },
-
-  {
-    title: 'Times Square',
-    description: 'Bustling commercial intersection in New York City',
-  },
-  {
-    title: 'Sydney Opera House',
-    description: 'Iconic performing arts venue in Sydney, Australia',
-  }
-];
+import { ActivityIndicator, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { MarkerList } from "../../components/marker/MarkerList";
+import { useLocation } from "@/hooks/useLocation";
+import { useMarkerData } from "@/hooks/useMarkerData";
+import React, { useEffect } from "react";
+import { defineMarkerAdress } from "@/services/osmService";
 
 export default function MapScreen() {
+  const { location } = useLocation();
+  const { markers, loading } = useMarkerData(
+    location?.coords?.latitude,
+    location?.coords?.longitude
+  );
+
+  useEffect( () => {
+    markers.forEach(async (marker) => {
+      marker.marker = {
+        ...marker.marker,
+        address: await defineMarkerAdress(marker)
+      }
+    })
+  }, [markers])
 
   return (
-    <SafeAreaView style={styles.container}>
-      <MarkerList markers={sampleMarkers} />
-    </SafeAreaView>
+    <>
+      {loading && <ActivityIndicator size="large" color="#FFFFFF" />}
+      {!loading && markers.length > 0 && (
+        <SafeAreaView style={styles.container}>
+          <MarkerList markers={markers} />
+        </SafeAreaView>
+      )}
+    </>
   );
 }
 
@@ -37,12 +43,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
   },
   description: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
     lineHeight: 24,
   },
 });
